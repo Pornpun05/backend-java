@@ -1,11 +1,11 @@
 package com.example.demo.controller;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 import org.apache.coyote.http11.Http11InputBuffer;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.repository.CrudRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -17,14 +17,25 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.demo.model.Employee;
+import com.example.demo.model.Role;
 import com.example.demo.repository.EmployeeRepository;
-
+import com.example.demo.repository.RoleRepository;
+import com.example.demo.repository.SkillRepository;
+import com.example.demo.model.Skill;
 @RestController
 public class EmployeeController {
 
 	@Autowired
 	EmployeeRepository employeeRepository;
-	private List<Employee> data = new ArrayList<Employee>();
+	
+	
+	@Autowired
+	RoleRepository roleRepository;
+	
+	@Autowired
+	SkillRepository skillRepository;
+
+	
 	
 	@GetMapping("/employee")
 	public ResponseEntity<Object>  getEmployee(){
@@ -41,11 +52,25 @@ public class EmployeeController {
 	@PostMapping("/employee")
 	public ResponseEntity<Object> addEmployee(@RequestBody Employee body) {
 		try {
-			Employee employee = employeeRepository.save(body);
-			return new ResponseEntity<>(employee,HttpStatus.CREATED);
-			
-		}catch (Exception e) {
-			return new ResponseEntity<>("Internal server error",HttpStatus.INTERNAL_SERVER_ERROR);
+
+			Optional<Role> role =roleRepository.findById(4);
+
+			body.setRole(role.get());
+
+			Employee employee =  employeeRepository.save(body);
+
+			for(Skill skill: body.getSkills()) {
+            	skill.setEmployee(employee);
+
+            	skillRepository.save(skill);
+
+			}
+
+			return new ResponseEntity<>(employee, HttpStatus.CREATED);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			return new ResponseEntity<>("Internal server error", HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 		
 	}
